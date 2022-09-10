@@ -1,16 +1,16 @@
 {
-    "name": "drozg/php-07-mvc",
+    "name": "sites/mvc-project",
     "autoload": {
         "psr-4": {
             "App\\": "App/",
-            "Config\\": "Config/",
+            "Config\\": "Configs/",
             "Core\\": "Core/"
         }
     },
     "authors": [
         {
-            "name": "DenisRozganyaev",
-            "email": "denis.rozganyaev@gmail.com"
+            "name": "SergeyStupak",
+            "email": "neowarewebdev@gmail.com"
         }
     ],
     "require-dev": {
