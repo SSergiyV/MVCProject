@@ -7,7 +7,7 @@ define("BASE_DIR", dirname(__DIR__));
 
 
 const APP_DIR = BASE_DIR . "/App";
-const VIEW_DIR = APP_DIR . "/Views";
+const VIEW_DIR = APP_DIR . "/Views/";
 const ASSET_URL = SITE_URL . "/assets";
 const IMG_URL = ASSET_URL . "/images";
 const JS_URL = ASSET_URL . "/js";
