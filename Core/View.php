@@ -18,6 +18,5 @@ class View
             throw new Exception("[{$file}] not found", 404);
         }
         require $file;
-
     }
 }

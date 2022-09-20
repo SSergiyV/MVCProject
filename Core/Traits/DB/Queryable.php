@@ -3,6 +3,7 @@
 namespace Core\Traits\DB;
 
 use Core\Db;
+use Exception;
 use PDO;
 
 trait Queryable
@@ -13,7 +14,7 @@ trait Queryable
 
     protected array $commands = [];
 
-    public static function create(array $fields)
+    public static function create(array $fields): int
     {
         $vars = static::preparedQueryVars($fields);
 
@@ -95,9 +96,73 @@ trait Queryable
 
         $query = "DELETE FROM " . static::$tableName . " WHERE id=:id";
         $query = Db::connect() -> prepare($query);
-        $query -> bindParam('id', $id);
+        $query -> bindValue('id', $id, PDO::PARAM_INT);
         $query->execute();
-
-        return $query -> fetchObject(static::class);
     }
+
+    public static function select(array $columns = ['*']): static {
+
+        static::$query = "";
+        static::$query = "SELECT " . implode(',', $columns) . " FROM " . static::$tableName . " ";
+        $obj = new static();
+        $obj->commands[] = 'select';
+
+        return $obj;
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function where(string $column, string $operator, $value): static {
+
+        if (!$this->allowMethod(['select'])) {
+            throw new Exception('Wrong request');
+        }
+
+        static::$query .= " WHERE {$column}{$operator}:{$column} ";
+        $this->commands[] = 'where';
+
+        return $this;
+    }
+
+    public function destroy() {
+
+        if (!isset($this -> id)) {
+            return $this;
+        }
+        return static::delete($this -> id);
+    }
+
+    public function update(array $data) {
+
+        if (!$this -> allowMethod(['select', 'all', 'where'])) {
+            throw new Exception('Wrong request');
+        }
+        if (isset($this -> id)) {
+            return $this;
+        }
+
+        $query = "UPDATE " . static::$tableName . ' SET ' . static::buildPlaceholder($data) . " WHERE id=:id";
+        $query = Db::connect() -> prepare($query);
+
+        foreach ($data as $key => $value) {
+            $query -> bindValue(":{$key}", $value);
+        }
+
+        $query -> bindValue('id', $this -> id, PDO::PARAM_INT);
+        $query -> execute();
+
+        return static::find($this -> id);
+    }
+
+    private static function buildPlaceholder(array $data) {
+
+        $placeholder = [];
+
+        foreach ($data as $key => $value) {
+            $placeholder[] = " {$key}=:{$key}";
+        }
+        return implode(', ', $placeholder);
+    }
+
 }

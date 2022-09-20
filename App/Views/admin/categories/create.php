@@ -7,8 +7,8 @@
                 <div class="card-body">
                     <form action="<?= url('/admin/categories/store') ?>" method="POST" enctype="multipart/form-data">
                         <div class="mb-3">
-                            <label for="name" class="form-label">Name</label>
-                            <input type="text" name="name" class="form-control" id="name" placeholder="Category name">
+                            <label for="title" class="form-label">Name</label>
+                            <input type="text" name="title" class="form-control" id="title" placeholder="Category name">
                         </div>
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
