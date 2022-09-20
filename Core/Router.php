@@ -5,26 +5,29 @@ namespace Core;
 class Router
 {
     protected array $routes = [], $params = [];
+
     protected array $convertTypes = [
-        "d" => "int",
-        "w" => "string"
+        'd' => 'int',
+        'w' => 'string'
     ];
 
-    public function add(string $route, array $params = []) {
-
+    public function add(string $route, array $params = [])
+    {
         $route = preg_replace('/\//', '\\/', $route);
         $route = preg_replace('/\{([a-z]+)\}/', '(?P<\1>[a-z-]+)', $route);
         $route = preg_replace('/\{([a-z]+):([^\}]+)\}/', '(?P<\1>\2)', $route);
 
         $route = "/^{$route}$/i";
-        $this -> routes[$route] = $params;
+        $this->routes[$route] = $params;
     }
 
-    public function dispatch(string $url): void {
-
+    /**
+     * @throws \Exception
+     */
+    public function dispatch(string $url)
+    {
         $url = trim($url, '/');
-
-        $url = $this->removeQueryStringVariables($url);
+        $url = $this->removeQuesryStringVariables($url);
         if ($this->match($url)) {
             if (array_key_exists('method', $this->params) && ($_SERVER['REQUEST_METHOD'] !== $this->params['method'])) {
                 throw new \Exception("Method " . $_SERVER['REQUEST_METHOD'] . " doesn't supported by this route");
@@ -40,6 +43,11 @@ class Router
                     if ($controller->before($action)) {
                         call_user_func_array([$controller, $action], $this->params);
                         $controller->after($action);
+                    } else {
+                        if (empty ($_SERVER['HTTP_REFERER'])) {
+                            redirect();
+                        }
+                        redirectBack();
                     }
                 } else {
                     throw new \Exception("Action {$this->params['action']} in class {$controller} not found");
@@ -52,27 +60,26 @@ class Router
         }
     }
 
-    protected function retrieveParam(string $name) {
-
-        $value = $this -> params[$name];
-        unset($this -> params[$name]);
+    protected function retrieveParam(string $name)
+    {
+        $value = $this->params[$name];
+        unset($this->params[$name]);
         return $value;
     }
 
-    protected function match(string $url): bool {
-
-        foreach($this -> routes as $route => $params) {
-
+    protected function match(string $url)
+    {
+        foreach($this->routes as $route => $params) {
             if (preg_match($route, $url, $matches)) {
-                $this -> params = $this -> setParams($route, $matches, $params);
+                $this->params = $this->setParams($route, $matches, $params);
                 return true;
             }
         }
         return false;
     }
 
-    protected function setParams(string $route, array $matches, array $params): array {
-
+    protected function setParams(string $route, array $matches, array $params): array
+    {
         preg_match_all('/\(\?P<[\w]+>\\\\(\w[\+])\)/', $route, $types);
         $matches = array_filter($matches, fn($key) => is_string($key), ARRAY_FILTER_USE_KEY);
 
@@ -90,13 +97,14 @@ class Router
         return $params;
     }
 
-    protected function removeQueryStringVariables(string $url): string {
+    protected function removeQuesryStringVariables(string $url)
+    {
+        return preg_replace('/([\w\/]+)\?([\w\/=\d]+)/i', '$1', $url);
 
-//        if ($url != '') {
+        //        if ($url != '') {
 //            $parts = explode('?', $url, 2);
 //            $url = $parts[0];
 //        }
 //        return $url;
-        return preg_replace('/([\w\/]+)\?([\w\/=\d]+)/i', '$1', $url);
     }
 }
